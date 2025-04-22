@@ -1,22 +1,16 @@
 package tree;
 
-public interface Tree<T> {
+public interface Tree<T, E> {
 
     void insert(T value);
 
-    boolean contains(T value);
+    E find(T value);
 
     void remove(T value);
-
-    T smallest();
-
-    T biggest();
 
     void traverseInOrder();
 
     void traversePreOrder();
 
     void traversePostOrder();
-
-    void traverseLevelOrder();
 }

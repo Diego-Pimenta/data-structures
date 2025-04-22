@@ -1,9 +1,6 @@
 package tree;
 
-import java.util.LinkedList;
-import java.util.Queue;
-
-public class BinaryTree<T extends Comparable<T>> implements Tree<T> {
+public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
 
     private class Node {
         private T value;
@@ -18,7 +15,6 @@ public class BinaryTree<T extends Comparable<T>> implements Tree<T> {
     }
 
     private Node root;
-    private int size;
 
     public BinaryTree() {
         root = null;
@@ -41,17 +37,17 @@ public class BinaryTree<T extends Comparable<T>> implements Tree<T> {
     }
 
     @Override
-    public boolean contains(T value) {
-        return containsRecursive(root, value);
+    public E find(T value) {
+        return findRecursive(root, value);
     }
 
-    private boolean containsRecursive(Node current, T value) {
-        if (isNodeEmpty(current)) return false;
-        if (isValueEqualToNode(current, value)) return true;
+    private E findRecursive(Node current, T value) {
+        if (isNodeEmpty(current)) return null;
+        if (isValueEqualToNode(current, value)) return (E) current;
 
         return isValueLessThanNode(current, value)
-                ? containsRecursive(current.left, value)
-                : containsRecursive(current.right, value);
+                ? findRecursive(current.left, value)
+                : findRecursive(current.right, value);
     }
 
     @Override
@@ -63,14 +59,10 @@ public class BinaryTree<T extends Comparable<T>> implements Tree<T> {
         if (isNodeEmpty(current)) return null;
 
         if (isValueEqualToNode(current, value)) {
-            if (areBothChildrenEmpty(current)) {
-                return null;
-            } else if (isRightNodeEmpty(current)) {
-                return current.left;
-            } else if (isLeftNodeEmpty(current)) {
-                return current.right;
+            if (isLeftNodeEmpty(current) || isRightNodeEmpty(current)) {
+                return (current.left == null) ? current.right : current.left;
             } else {
-                return reorganizeSubTree(current); // Em caso de 2 filhos
+                return reorganizeSubTree(current); // In case of 2 children
             }
         }
 
@@ -80,36 +72,14 @@ public class BinaryTree<T extends Comparable<T>> implements Tree<T> {
     }
 
     private Node reorganizeSubTree(Node root) {
-        T smallestValue = findSmallestValue(root.right);
+        T smallestValue = mostLeftChild(root.right).value;
         root.value = smallestValue;
         root.right = removeRecursive(root.right, smallestValue);
         return root;
     }
 
-    @Override
-    public T smallest() {
-        if (isNodeEmpty(root)) throw new EmptyTreeException("Tree is empty!");
-
-        return findSmallestValue(root);
-    }
-
-    private T findSmallestValue(Node root) {
-        return isLeftNodeEmpty(root)
-                ? root.value
-                : findSmallestValue(root.left);
-    }
-
-    @Override
-    public T biggest() {
-        if (isNodeEmpty(root)) throw new EmptyTreeException("Tree is empty!");
-
-        return findBiggestValue(root);
-    }
-
-    private T findBiggestValue(Node root) {
-        return isRightNodeEmpty(root)
-                ? root.value
-                : findBiggestValue(root.right);
+    private Node mostLeftChild(Node root) {
+        return isLeftNodeEmpty(root) ? root : mostLeftChild(root.left);
     }
 
     @Override
@@ -151,23 +121,6 @@ public class BinaryTree<T extends Comparable<T>> implements Tree<T> {
         }
     }
 
-    @Override
-    public void traverseLevelOrder() {
-        if (isNodeEmpty(root)) return;
-
-        Queue<Node> nodes = new LinkedList<>();
-        nodes.add(root);
-
-        while (!nodes.isEmpty()) {
-            Node node = nodes.remove();
-
-            System.out.println(" " + node.value);
-
-            if (!isLeftNodeEmpty(node)) nodes.add(node.left);
-            if (!isRightNodeEmpty(node)) nodes.add(node.right);
-        }
-    }
-
     private boolean isNodeEmpty(Node current) {
         return current == null;
     }
@@ -178,10 +131,6 @@ public class BinaryTree<T extends Comparable<T>> implements Tree<T> {
 
     private boolean isRightNodeEmpty(Node current) {
         return current.right == null;
-    }
-
-    private boolean areBothChildrenEmpty(Node current) {
-        return current.left == null && current.right == null;
     }
 
     private boolean isValueEqualToNode(Node current, T value) {
