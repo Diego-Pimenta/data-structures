@@ -9,8 +9,7 @@ public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
 
         public Node(T value) {
             this.value = value;
-            left = null;
-            right = null;
+            left = right = null;
         }
     }
 
@@ -59,8 +58,8 @@ public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
         if (isNodeEmpty(current)) return null;
 
         if (isValueEqualToNode(current, value)) {
-            if (isLeftNodeEmpty(current) || isRightNodeEmpty(current)) {
-                return (current.left == null) ? current.right : current.left;
+            if (isNodeEmpty(current.left) || isNodeEmpty(current.right)) {
+                return isNodeEmpty(current.left) ? current.right : current.left;
             } else {
                 return reorganizeSubTree(current); // In case of 2 children
             }
@@ -79,7 +78,7 @@ public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
     }
 
     private Node mostLeftChild(Node root) {
-        return isLeftNodeEmpty(root) ? root : mostLeftChild(root.left);
+        return isNodeEmpty(root.left) ? root : mostLeftChild(root.left);
     }
 
     @Override
@@ -123,14 +122,6 @@ public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
 
     private boolean isNodeEmpty(Node current) {
         return current == null;
-    }
-
-    private boolean isLeftNodeEmpty(Node current) {
-        return current.left == null;
-    }
-
-    private boolean isRightNodeEmpty(Node current) {
-        return current.right == null;
     }
 
     private boolean isValueEqualToNode(Node current, T value) {
