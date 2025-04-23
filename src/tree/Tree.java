@@ -8,9 +8,9 @@ public interface Tree<T, E> {
 
     void remove(T value);
 
-    void traverseInOrder();
+    String traverseInOrder();
 
-    void traversePreOrder();
+    String traversePreOrder();
 
-    void traversePostOrder();
+    String traversePostOrder();
 }

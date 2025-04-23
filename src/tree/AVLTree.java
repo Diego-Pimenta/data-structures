@@ -3,9 +3,11 @@ package tree;
 public class AVLTree implements Tree<Integer, AVLTree.Node> {
 
     private Node root;
+    private int rotationsCount;
 
     public AVLTree() {
         root = null;
+        rotationsCount = 0;
     }
 
     // Left element of root now becomes root
@@ -17,6 +19,7 @@ public class AVLTree implements Tree<Integer, AVLTree.Node> {
         Node.updateHeight(node);
         Node.updateHeight(left);
 
+        rotationsCount++;
         return left;
     }
 
@@ -29,6 +32,7 @@ public class AVLTree implements Tree<Integer, AVLTree.Node> {
         Node.updateHeight(node);
         Node.updateHeight(right);
 
+        rotationsCount++;
         return right;
     }
 
@@ -42,14 +46,14 @@ public class AVLTree implements Tree<Integer, AVLTree.Node> {
         if (isUnbalancePositive(balance)) {
             int rightBalance = Node.balanceFactor(node.right);
             if (!isBalanceFactorPositive(rightBalance)) {
-                // Rotation necessary to reestablish balance (RL -> Right Rotation and Left Rotation)
+                // Rotation necessary to allow balance (RL -> Right Rotation and Left Rotation)
                 node.right = rotateRight(node.right);
             }
             node = rotateLeft(node);
         } else if (isUnbalanceNegative(balance)) {
             int leftBalance = Node.balanceFactor(node.left);
             if (!isBalanceFactorNegative(leftBalance)) {
-                // Rotation necessary to reestablish balance (LR -> Left Rotation and Right Rotation)
+                // Rotation necessary to allow balance (LR -> Left Rotation and Right Rotation)
                 node.left = rotateLeft(node.left);
             }
             node = rotateRight(node);
@@ -59,7 +63,9 @@ public class AVLTree implements Tree<Integer, AVLTree.Node> {
 
     @Override
     public void insert(Integer value) {
+        rotationsCount = 0;
         root = insertRecursive(root, value);
+        System.out.printf("Rotations made in insertion: %d%n", rotationsCount);
     }
 
     private Node insertRecursive(Node node, Integer value) {
@@ -91,26 +97,32 @@ public class AVLTree implements Tree<Integer, AVLTree.Node> {
 
     @Override
     public void remove(Integer value) {
+        rotationsCount = 0;
         root = deleteRecursive(root, value);
+        System.out.printf("Rotations made in removal: %d%n", rotationsCount);
     }
 
     private Node deleteRecursive(Node node, Integer value) {
         if (isNodeEmpty(node)) return null;
 
-        if (isValueEqualToNode(node, value)) {
+        if (isValueLessThanNode(node, value)) {
+            node.left = deleteRecursive(node.left, value);
+        } else if (isValueGreaterThanNode(node, value)) {
+            node.right = deleteRecursive(node.right, value);
+        } else {
             if (isNodeEmpty(node.left) || isNodeEmpty(node.right)) {
                 node = isNodeEmpty(node.left) ? node.right : node.left;
             } else {
                 node = reorganizeSubTree(node); // In case of 2 children
             }
-            return !isNodeEmpty(node) ? rebalance(node) : null;
         }
-
-        return isValueLessThanNode(node, value)
-                ? deleteRecursive(node.left, value)
-                : deleteRecursive(node.right, value);
+        node = !isNodeEmpty(node) ? rebalance(node) : null;
+        return node;
     }
 
+    // Take the smallest value in the RIGHT subtree to replace the removed parent.
+    // Another option would be to pick the biggest value int the left subtree.
+    // After the process we clean the right/left subtree by removing the old child.
     private Node reorganizeSubTree(Node root) {
         Integer smallestValue = mostLeftChild(root.right).value;
         root.value = smallestValue;
@@ -123,42 +135,51 @@ public class AVLTree implements Tree<Integer, AVLTree.Node> {
     }
 
     @Override
-    public void traverseInOrder() {
-        traverseInOrder(root);
+    public String traverseInOrder() {
+        StringBuilder sb = new StringBuilder();
+        sb = traverseInOrder(root, sb);
+        return sb.toString();
     }
 
-    private void traverseInOrder(Node node) {
+    private StringBuilder traverseInOrder(Node node, StringBuilder sb) {
         if (!isNodeEmpty(node)) {
-            traverseInOrder(node.left);
-            System.out.print(node.value + " ");
-            traverseInOrder(node.right);
+            traverseInOrder(node.left, sb);
+            sb.append(String.format("%d ", node.value));
+            traverseInOrder(node.right, sb);
         }
+        return sb;
     }
 
     @Override
-    public void traversePreOrder() {
-        traversePreOrder(root);
+    public String traversePreOrder() {
+        StringBuilder sb = new StringBuilder();
+        sb = traversePreOrder(root, sb);
+        return sb.toString();
     }
 
-    private void traversePreOrder(Node node) {
+    private StringBuilder traversePreOrder(Node node, StringBuilder sb) {
         if (!isNodeEmpty(node)) {
-            System.out.print(node.value + " ");
-            traversePreOrder(node.left);
-            traversePreOrder(node.right);
+            sb.append(String.format("%d ", node.value));
+            traversePreOrder(node.left, sb);
+            traversePreOrder(node.right, sb);
         }
+        return sb;
     }
 
     @Override
-    public void traversePostOrder() {
-        traversePostOrder(root);
+    public String traversePostOrder() {
+        StringBuilder sb = new StringBuilder();
+        sb = traversePostOrder(root, sb);
+        return sb.toString();
     }
 
-    private void traversePostOrder(Node node) {
+    private StringBuilder traversePostOrder(Node node, StringBuilder sb) {
         if (!isNodeEmpty(node)) {
-            traversePostOrder(node.left);
-            traversePostOrder(node.right);
-            System.out.print(node.value + " ");
+            traversePostOrder(node.left, sb);
+            traversePostOrder(node.right, sb);
+            sb.append(String.format("%d ", node.value));
         }
+        return sb;
     }
 
     private boolean isUnbalancePositive(int balance) {
@@ -201,7 +222,7 @@ public class AVLTree implements Tree<Integer, AVLTree.Node> {
 
         public Node(Integer value) {
             this.value = value;
-            this.height = 0;
+            height = 0;
             left = right = null;
         }
 

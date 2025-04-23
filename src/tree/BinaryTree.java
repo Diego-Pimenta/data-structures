@@ -2,17 +2,6 @@ package tree;
 
 public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
 
-    private class Node {
-        private T value;
-        private Node left;
-        private Node right;
-
-        public Node(T value) {
-            this.value = value;
-            left = right = null;
-        }
-    }
-
     private Node root;
 
     public BinaryTree() {
@@ -59,17 +48,24 @@ public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
 
         if (isValueEqualToNode(current, value)) {
             if (isNodeEmpty(current.left) || isNodeEmpty(current.right)) {
-                return isNodeEmpty(current.left) ? current.right : current.left;
+                current = isNodeEmpty(current.left) ? current.right : current.left;
             } else {
-                return reorganizeSubTree(current); // In case of 2 children
+                current = reorganizeSubTree(current); // In case of 2 children
             }
+            return current;
         }
 
-        return isValueLessThanNode(current, value)
-                ? removeRecursive(current.left, value)
-                : removeRecursive(current.right, value);
+        if (isValueLessThanNode(current, value)) {
+            current.left = removeRecursive(current.left, value);
+            return current;
+        }
+        current.right = removeRecursive(current.right, value);
+        return current;
     }
 
+    // Take the smallest value in the RIGHT subtree to replace the removed parent.
+    // Another option would be to pick the biggest value int the left subtree.
+    // After the process we clean the right/left subtree by removing the old child.
     private Node reorganizeSubTree(Node root) {
         T smallestValue = mostLeftChild(root.right).value;
         root.value = smallestValue;
@@ -82,42 +78,51 @@ public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
     }
 
     @Override
-    public void traverseInOrder() {
-        traverseInOrder(root);
+    public String traverseInOrder() {
+        StringBuilder sb = new StringBuilder();
+        sb = traverseInOrder(root, sb);
+        return sb.toString();
     }
 
-    private void traverseInOrder(Node current) {
-        if (!isNodeEmpty(current)) {
-            traverseInOrder(current.left);
-            System.out.print(" " + current.value);
-            traverseInOrder(current.right);
+    private StringBuilder traverseInOrder(Node node, StringBuilder sb) {
+        if (!isNodeEmpty(node)) {
+            traverseInOrder(node.left, sb);
+            sb.append(String.format("%d ", node.value));
+            traverseInOrder(node.right, sb);
         }
+        return sb;
     }
 
     @Override
-    public void traversePreOrder() {
-        traversePreOrder(root);
+    public String traversePreOrder() {
+        StringBuilder sb = new StringBuilder();
+        sb = traversePreOrder(root, sb);
+        return sb.toString();
     }
 
-    private void traversePreOrder(Node current) {
-        if (!isNodeEmpty(current)) {
-            System.out.print(" " + current.value);
-            traversePreOrder(current.left);
-            traversePreOrder(current.right);
+    private StringBuilder traversePreOrder(Node node, StringBuilder sb) {
+        if (!isNodeEmpty(node)) {
+            sb.append(String.format("%d ", node.value));
+            traversePreOrder(node.left, sb);
+            traversePreOrder(node.right, sb);
         }
+        return sb;
     }
 
     @Override
-    public void traversePostOrder() {
-        traversePostOrder(root);
+    public String traversePostOrder() {
+        StringBuilder sb = new StringBuilder();
+        sb = traversePostOrder(root, sb);
+        return sb.toString();
     }
 
-    private void traversePostOrder(Node current) {
-        if (!isNodeEmpty(current)) {
-            traversePostOrder(current.left);
-            traversePostOrder(current.right);
-            System.out.print(" " + current.value);
+    private StringBuilder traversePostOrder(Node node, StringBuilder sb) {
+        if (!isNodeEmpty(node)) {
+            traversePostOrder(node.left, sb);
+            traversePostOrder(node.right, sb);
+            sb.append(String.format("%d ", node.value));
         }
+        return sb;
     }
 
     private boolean isNodeEmpty(Node current) {
@@ -134,5 +139,16 @@ public class BinaryTree<T extends Comparable<T>, E> implements Tree<T, E> {
 
     private boolean isValueGreaterThanNode(Node current, T value) {
         return value.compareTo(current.value) > 0;
+    }
+
+    private class Node {
+        private T value;
+        private Node left;
+        private Node right;
+
+        public Node(T value) {
+            this.value = value;
+            left = right = null;
+        }
     }
 }
