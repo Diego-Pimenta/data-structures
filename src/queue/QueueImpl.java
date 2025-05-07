@@ -42,6 +42,9 @@ public class QueueImpl<T> implements Queue<T> {
         }
         Element e = first;
         first = first.next;
+        if (first == null) {
+            last = null;
+        }
         size--;
         return e.value;
     }
